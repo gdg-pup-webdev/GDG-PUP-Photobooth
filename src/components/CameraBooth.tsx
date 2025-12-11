@@ -34,6 +34,7 @@ export default function CameraBooth() {
   const [email, setEmail] = useState<string>("");
   const [sending, setSending] = useState<boolean>(false);
   const [sent, setSent] = useState<boolean>(false);
+  const [emailError, setEmailError] = useState<string>("");
 
   // Initialize camera
   useEffect(() => {
@@ -171,6 +172,7 @@ export default function CameraBooth() {
     setReshootIndex(null);
     setEmail("");
     setSent(false);
+    setEmailError("");
     playVideo();
   };
 
@@ -259,7 +261,8 @@ export default function CameraBooth() {
 
   const currentShotIndex = shots.findIndex((s) => s === null);
   const allShotsTaken = shots.every((s) => s !== null);
-  const currentFilterObj = FILTERS.find((f) => f.value === currentFilter) || FILTERS[0];
+  const currentFilterObj =
+    FILTERS.find((f) => f.value === currentFilter) || FILTERS[0];
 
   return (
     <div
@@ -271,31 +274,69 @@ export default function CameraBooth() {
       {/* CSS Animations */}
       <style jsx global>{`
         @keyframes float {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(5deg); }
+          0%,
+          100% {
+            transform: translateY(0) rotate(0deg);
+          }
+          50% {
+            transform: translateY(-20px) rotate(5deg);
+          }
         }
         @keyframes twinkle {
-          0%, 100% { opacity: 0.2; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(1.2); }
+          0%,
+          100% {
+            opacity: 0.2;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.5;
+            transform: scale(1.2);
+          }
         }
         @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
         }
         @keyframes gradientShift {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
+          0%,
+          100% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
         }
         @keyframes glow {
-          0%, 100% { box-shadow: 0 0 20px ${colors.blue}40, 0 0 40px ${colors.blue}20; }
-          25% { box-shadow: 0 0 20px ${colors.red}40, 0 0 40px ${colors.red}20; }
-          50% { box-shadow: 0 0 20px ${colors.yellow}40, 0 0 40px ${colors.yellow}20; }
-          75% { box-shadow: 0 0 20px ${colors.green}40, 0 0 40px ${colors.green}20; }
+          0%,
+          100% {
+            box-shadow: 0 0 20px ${colors.blue}40, 0 0 40px ${colors.blue}20;
+          }
+          25% {
+            box-shadow: 0 0 20px ${colors.red}40, 0 0 40px ${colors.red}20;
+          }
+          50% {
+            box-shadow: 0 0 20px ${colors.yellow}40, 0 0 40px ${colors.yellow}20;
+          }
+          75% {
+            box-shadow: 0 0 20px ${colors.green}40, 0 0 40px ${colors.green}20;
+          }
         }
         @keyframes countBounce {
-          0% { transform: scale(0.5); opacity: 0; }
-          50% { transform: scale(1.1); }
-          100% { transform: scale(1); opacity: 1; }
+          0% {
+            transform: scale(0.5);
+            opacity: 0;
+          }
+          50% {
+            transform: scale(1.1);
+          }
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
         }
       `}</style>
 
@@ -341,7 +382,7 @@ export default function CameraBooth() {
               <video
                 ref={videoRef}
                 className="w-full h-full object-cover"
-                style={{ 
+                style={{
                   filter: currentFilter,
                   transform: "scaleX(-1)", // Mirror the video like a selfie camera
                 }}
@@ -400,7 +441,8 @@ export default function CameraBooth() {
                     key={i}
                     className="h-[5%] w-full"
                     style={{
-                      background: i % 2 === 0 ? "rgba(255,255,255,0.1)" : "transparent",
+                      background:
+                        i % 2 === 0 ? "rgba(255,255,255,0.1)" : "transparent",
                     }}
                   />
                 ))}
@@ -457,7 +499,8 @@ export default function CameraBooth() {
                     style={{
                       background: "linear-gradient(135deg, #333, #222)",
                       border: "3px solid #444",
-                      boxShadow: "0 8px 25px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.1)",
+                      boxShadow:
+                        "0 8px 25px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.1)",
                     }}
                   >
                     <svg
@@ -473,7 +516,9 @@ export default function CameraBooth() {
                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                       />
                     </svg>
-                    <span className="text-[10px] font-bold text-zinc-400">RESET</span>
+                    <span className="text-[10px] font-bold text-zinc-400">
+                      RESET
+                    </span>
                   </button>
                 )}
               </div>
@@ -541,7 +586,9 @@ export default function CameraBooth() {
               >
                 <div className="flex gap-1.5 justify-center">
                   {shots.map((shot, i) => {
-                    const dotColor = [colors.blue, colors.red, colors.yellow][i];
+                    const dotColor = [colors.blue, colors.red, colors.yellow][
+                      i
+                    ];
                     return (
                       <div
                         key={i}
@@ -573,7 +620,9 @@ export default function CameraBooth() {
                       className="w-3 h-3 rounded-full"
                       style={{
                         backgroundColor: color,
-                        animation: `twinkle ${2 + i * 0.5}s ease-in-out infinite`,
+                        animation: `twinkle ${
+                          2 + i * 0.5
+                        }s ease-in-out infinite`,
                         animationDelay: `${i * 0.2}s`,
                       }}
                     />
@@ -628,7 +677,9 @@ export default function CameraBooth() {
                     />
                   </div>
                   <div>
-                    <div className="text-white font-bold">{currentFilterObj.name}</div>
+                    <div className="text-white font-bold">
+                      {currentFilterObj.name}
+                    </div>
                     <div className="text-zinc-500 text-sm">Current filter</div>
                   </div>
                 </div>
@@ -661,7 +712,9 @@ export default function CameraBooth() {
 
                 <div className="space-y-4">
                   {shots.map((s, i) => {
-                    const shotColor = [colors.blue, colors.red, colors.yellow][i];
+                    const shotColor = [colors.blue, colors.red, colors.yellow][
+                      i
+                    ];
                     return (
                       <div
                         key={i}
@@ -687,7 +740,10 @@ export default function CameraBooth() {
                           )}
                         </div>
                         <div className="flex-1">
-                          <div className="font-bold mb-1" style={{ color: shotColor }}>
+                          <div
+                            className="font-bold mb-1"
+                            style={{ color: shotColor }}
+                          >
                             Shot {i + 1}
                           </div>
                           <button
@@ -754,7 +810,10 @@ export default function CameraBooth() {
                         <input
                           type="email"
                           value={email}
-                          onChange={(e) => setEmail(e.target.value)}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            setEmailError(""); // Clear error when user types
+                          }}
                           placeholder="Enter your email"
                           className="w-full py-4 px-5 bg-transparent text-white placeholder:text-zinc-500 focus:outline-none"
                         />
@@ -771,22 +830,44 @@ export default function CameraBooth() {
                         disabled={!email || sending}
                         onClick={async () => {
                           setSending(true);
+                          setEmailError("");
                           try {
                             const dataUrl = await generateFinal();
                             const blob = await (await fetch(dataUrl)).blob();
+
+                            console.log("Generated blob:", {
+                              size: blob.size,
+                              type: blob.type,
+                            });
+
+                            if (blob.size === 0) {
+                              throw new Error("Generated image is empty");
+                            }
+
                             const formData = new FormData();
                             formData.append("email", email);
                             formData.append("file", blob, "photostrip.jpg");
 
-                            await fetch("/api/sendEmail", {
+                            const response = await fetch("/api/sendEmail", {
                               method: "POST",
                               body: formData,
                             });
 
-                            setSent(true);
+                            const data = await response.json();
+
+                            if (response.ok) {
+                              setSent(true);
+                            } else {
+                              setEmailError(
+                                data.message ||
+                                  "Failed to send email. Please try again."
+                              );
+                            }
                           } catch (err) {
                             console.error(err);
-                            alert("Failed to send email.");
+                            setEmailError(
+                              "Failed to send email. Please check your connection and try again."
+                            );
                           } finally {
                             setSending(false);
                           }
@@ -798,7 +879,9 @@ export default function CameraBooth() {
                               ? "#444"
                               : `linear-gradient(135deg, ${colors.blue}, ${colors.red})`,
                           boxShadow:
-                            !email || sending ? "none" : `0 15px 35px ${colors.blue}40`,
+                            !email || sending
+                              ? "none"
+                              : `0 15px 35px ${colors.blue}40`,
                           color: "#fff",
                         }}
                       >
@@ -817,6 +900,45 @@ export default function CameraBooth() {
                         </svg>
                         {sending ? "Sending..." : "Send to Email"}
                       </button>
+
+                      {/* Error message */}
+                      {emailError && (
+                        <div
+                          className="flex items-start gap-3 p-4 rounded-xl"
+                          style={{
+                            background: `${colors.red}20`,
+                            border: `1px solid ${colors.red}50`,
+                          }}
+                        >
+                          <div
+                            className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                            style={{ background: colors.red }}
+                          >
+                            <svg
+                              className="w-4 h-4 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </div>
+                          <div>
+                            <div
+                              className="font-bold"
+                              style={{ color: colors.red }}
+                            >
+                              Error Sending Email
+                            </div>
+                            <div className="text-zinc-400 text-sm">
+                              {emailError}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div
@@ -843,10 +965,15 @@ export default function CameraBooth() {
                         </svg>
                       </div>
                       <div>
-                        <div className="font-bold" style={{ color: colors.green }}>
+                        <div
+                          className="font-bold"
+                          style={{ color: colors.green }}
+                        >
                           Email Sent!
                         </div>
-                        <div className="text-zinc-400 text-sm">Check your inbox</div>
+                        <div className="text-zinc-400 text-sm">
+                          Check your inbox
+                        </div>
                       </div>
                     </div>
                   )}
