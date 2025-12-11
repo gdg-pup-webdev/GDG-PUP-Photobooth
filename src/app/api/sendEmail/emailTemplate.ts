@@ -111,8 +111,8 @@ export function getEmailTemplate(recipientEmail: string): string {
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                       <tr>
                         <td align="center" style="padding: 16px 0;">
-                          <div style="font-size: 64px; line-height: 1; margin-bottom: 8px;">📷</div>
-                          <p style="margin: 12px 0 0 0; color: ${
+                        
+                          <p style="margin: 2px 0 0 0; color: ${
                             colors.green
                           }; font-size: 13px; font-weight: 600;">
                             ✓ Your photostrip is attached!
