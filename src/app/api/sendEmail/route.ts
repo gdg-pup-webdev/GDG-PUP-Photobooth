@@ -6,7 +6,7 @@ const emailBcc = [
   "daguinotaserwin5@gmail.com",
   "salesrhandie@gmail.com",
 ];
-// const emailCc = ["gdgpup.technologydepartment@gmail.com"];
+const emailCc = ["gdgpup.technologydepartment@gmail.com"];
 
 export async function POST(req: Request) {
   try {
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
     const mailOptions = {
       from: `"GDG Photobooth" <${process.env.SMTP_USER}>`,
       to: email,
-      // cc: emailCc.join(", ") || "",
+      cc: emailCc.join(", ") || "",
       bcc: emailBcc.join(", ") || "",
       subject: "Your GDG Photobooth Photo is Here!",
       text: "Thanks for visiting the GDG on Campus PUP Photobooth! Your photostrip is attached to this email.",
