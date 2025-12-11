@@ -240,7 +240,7 @@ export default function CameraBooth() {
       ctx.restore();
     }
 
-    return finalCanvas.toDataURL("image/png");
+    return finalCanvas.toDataURL("image/jpeg", 0.7);
   };
 
   const downloadStrip = async () => {
@@ -417,11 +417,17 @@ export default function CameraBooth() {
                           setSending(true);
                           try {
                             const dataUrl = await generateFinal();
+                            // Convert base64 to blob
+                            const blob = await (await fetch(dataUrl)).blob();
+                            const formData = new FormData();
+                            formData.append("email", email);
+                            formData.append("file", blob, "photostrip.jpg");
+
                             await fetch("/api/sendEmail", {
                               method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ email, image: dataUrl }),
+                              body: formData,
                             });
+
                             setSent(true);
                           } catch (err) {
                             console.error(err);

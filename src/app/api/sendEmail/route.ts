@@ -2,20 +2,21 @@ import nodemailer from "nodemailer";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { email, image } = body;
+    const formData = await req.formData();
+    const email = formData.get("email") as string;
+    const file = formData.get("file") as Blob;
 
-    if (!email || !image) {
+    if (!email || !file) {
       return new Response(
-        JSON.stringify({ message: "Email and image are required" }),
+        JSON.stringify({ message: "Email and file required" }),
         {
           status: 400,
-          headers: { "Content-Type": "application/json" },
         }
       );
     }
 
-    // Create transporter
+    const buffer = Buffer.from(await file.arrayBuffer());
+
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT || 587),
@@ -26,35 +27,28 @@ export async function POST(req: Request) {
       },
     });
 
-    // Send email
     await transporter.sendMail({
-      from: process.env.SMTP_USER, // your email as sender
+      from: process.env.SMTP_USER,
       to: email,
       subject: "GDG Photobooth",
-      text: "Here is your photo strip from the booth!",
+      text: "Here is your photostrip!",
       attachments: [
         {
-          filename: "photostrip.png",
-          content: image.split("base64,")[1],
-          encoding: "base64",
+          filename: "photostrip.jpg",
+          content: buffer,
         },
       ],
     });
 
-    return new Response(
-      JSON.stringify({ message: "Email sent successfully!" }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    return new Response(JSON.stringify({ message: "Email sent!" }), {
+      status: 200,
+    });
   } catch (err) {
     console.error(err);
     return new Response(
       JSON.stringify({ message: "Failed to send email", error: err }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json" },
       }
     );
   }
