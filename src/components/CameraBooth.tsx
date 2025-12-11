@@ -1,15 +1,19 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import {
+  FloatingShapes,
+  CountdownOverlay,
+  ShotProgress,
+  CaptureButton,
+  FilterModal,
+  GDGFooter,
+  colors,
+  colorArray,
+  FILTERS,
+} from "./ui";
 
 type Shot = string | null;
-
-const FILTERS = [
-  { name: "Normal", value: "" },
-  { name: "Grayscale", value: "grayscale(100%)" },
-  { name: "Sepia", value: "sepia(100%)" },
-  { name: "Vintage", value: "contrast(1.2) saturate(0.8)" },
-];
 
 export default function CameraBooth() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -22,6 +26,9 @@ export default function CameraBooth() {
   const [showReview, setShowReview] = useState(false);
   const [currentFilter, setCurrentFilter] = useState<string>("");
   const [reshootIndex, setReshootIndex] = useState<number | null>(null);
+
+  // Modal states
+  const [showFilterModal, setShowFilterModal] = useState(false);
 
   // Email states
   const [email, setEmail] = useState<string>("");
@@ -104,7 +111,6 @@ export default function CameraBooth() {
       setCountdown(null);
       setReshootIndex(null);
 
-      // Show review if all shots filled
       setShowReview((prev) => {
         const allTaken = shots
           .map((s, i) => (reshootIndex === i ? data : s))
@@ -253,171 +259,520 @@ export default function CameraBooth() {
 
   const currentShotIndex = shots.findIndex((s) => s === null);
   const allShotsTaken = shots.every((s) => s !== null);
+  const currentFilterObj = FILTERS.find((f) => f.value === currentFilter) || FILTERS[0];
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-6">
-      <div className="w-full max-w-7xl">
-        <div className="grid lg:grid-cols-[1fr,400px] gap-8">
-          {/* Camera Preview */}
-          <div className="relative w-full aspect-[3/4] max-h-[85vh] rounded-2xl overflow-hidden shadow-2xl bg-zinc-900">
-            <video
-              ref={videoRef}
-              className="w-full h-full object-cover"
-              style={{ filter: currentFilter }}
-              muted
-              playsInline
-            />
-            {countdown !== null && (
-              <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
-                <div className="text-white text-[160px] font-black animate-pulse">
-                  {countdown}
+    <div
+      className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden"
+      style={{
+        background: `linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%)`,
+      }}
+    >
+      {/* CSS Animations */}
+      <style jsx global>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        @keyframes twinkle {
+          0%, 100% { opacity: 0.2; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        @keyframes gradientShift {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        @keyframes glow {
+          0%, 100% { box-shadow: 0 0 20px ${colors.blue}40, 0 0 40px ${colors.blue}20; }
+          25% { box-shadow: 0 0 20px ${colors.red}40, 0 0 40px ${colors.red}20; }
+          50% { box-shadow: 0 0 20px ${colors.yellow}40, 0 0 40px ${colors.yellow}20; }
+          75% { box-shadow: 0 0 20px ${colors.green}40, 0 0 40px ${colors.green}20; }
+        }
+        @keyframes countBounce {
+          0% { transform: scale(0.5); opacity: 0; }
+          50% { transform: scale(1.1); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
+
+      <FloatingShapes />
+
+      {/* Filter Modal */}
+      <FilterModal
+        isOpen={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        currentFilter={currentFilter}
+        onSelectFilter={setCurrentFilter}
+      />
+
+      <div className="w-full max-w-7xl relative z-10">
+        <div className="grid lg:grid-cols-[1fr,420px] gap-8">
+          {/* Camera Body - Preview + Controls Side Panel */}
+          <div className="flex gap-0">
+            {/* Camera Preview (Viewfinder) */}
+            <div
+              className="relative flex-1 aspect-[3/4] max-h-[85vh] rounded-l-3xl overflow-hidden"
+              style={{
+                background: "linear-gradient(145deg, #1a1a2e, #0f0f0f)",
+                boxShadow: `
+                  0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.1)
+                `,
+                animation: "glow 8s ease-in-out infinite",
+              }}
+            >
+              {/* Decorative border gradient */}
+              <div
+                className="absolute inset-0 rounded-l-3xl pointer-events-none z-10"
+                style={{
+                  background: `linear-gradient(135deg, ${colors.blue}30, ${colors.red}30, ${colors.yellow}30, ${colors.green}30)`,
+                  padding: "2px",
+                  WebkitMask:
+                    "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                  WebkitMaskComposite: "xor",
+                  maskComposite: "exclude",
+                }}
+              />
+
+              <video
+                ref={videoRef}
+                className="w-full h-full object-cover"
+                style={{ 
+                  filter: currentFilter,
+                  transform: "scaleX(-1)", // Mirror the video like a selfie camera
+                }}
+                muted
+                playsInline
+              />
+
+              {countdown !== null && <CountdownOverlay countdown={countdown} />}
+
+              <ShotProgress shots={shots} currentIndex={currentShotIndex} />
+
+              {showReview && allShotsTaken && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none backdrop-blur-sm z-5">
+                  <div
+                    className="flex items-center gap-3 px-6 py-3 rounded-full"
+                    style={{
+                      background: `linear-gradient(135deg, ${colors.green}, ${colors.blue})`,
+                      boxShadow: `0 10px 30px ${colors.green}50`,
+                    }}
+                  >
+                    <svg
+                      className="w-6 h-6 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span className="text-white font-bold text-lg">
+                      All shots captured!
+                    </span>
+                  </div>
                 </div>
-              </div>
-            )}
-            <div className="absolute top-6 left-6 right-6">
-              <div className="flex gap-3">
-                {shots.map((shot, i) => (
+              )}
+            </div>
+
+            {/* Camera Body Side Panel - Physical Buttons */}
+            <div
+              className="w-28 rounded-r-3xl flex flex-col items-center justify-center gap-6 py-8"
+              style={{
+                background: "linear-gradient(180deg, #1f1f35 0%, #151525 100%)",
+                borderLeft: "1px solid rgba(255, 255, 255, 0.05)",
+                boxShadow: `
+                  inset -10px 0 30px rgba(0, 0, 0, 0.3),
+                  0 25px 50px -12px rgba(0, 0, 0, 0.5)
+                `,
+              }}
+            >
+              {/* Camera Grip Texture */}
+              <div className="absolute inset-y-0 right-0 w-6 opacity-20 pointer-events-none">
+                {[...Array(20)].map((_, i) => (
                   <div
                     key={i}
-                    className={`flex-1 h-1.5 rounded-full transition-all ${
-                      shot
-                        ? "bg-emerald-400"
-                        : i === currentShotIndex
-                        ? "bg-white/50 animate-pulse"
-                        : "bg-white/20"
-                    }`}
+                    className="h-[5%] w-full"
+                    style={{
+                      background: i % 2 === 0 ? "rgba(255,255,255,0.1)" : "transparent",
+                    }}
                   />
                 ))}
               </div>
-            </div>
-            {showReview && allShotsTaken && (
-              <div className="absolute inset-0 bg-black/40 flex items-end justify-center pb-8 pointer-events-none">
-                <div className="text-emerald-400 font-bold text-lg mb-2">
-                  ✓ All shots captured!
+
+              {/* Filter Button */}
+              <button
+                onClick={() => setShowFilterModal(true)}
+                className="flex flex-col items-center gap-2 p-3 rounded-xl transition-all hover:scale-105 hover:bg-white/5 group"
+              >
+                <div
+                  className="w-14 h-14 rounded-full overflow-hidden transition-all group-hover:scale-110"
+                  style={{
+                    border: `2px solid ${currentFilterObj.color}`,
+                    boxShadow: `0 0 20px ${currentFilterObj.color}30`,
+                  }}
+                >
+                  <img
+                    src="/sparky.webp"
+                    alt="Filter preview"
+                    className="w-full h-full object-cover"
+                    style={{ filter: currentFilter || "none" }}
+                  />
+                </div>
+                <span className="text-xs font-bold text-zinc-400 group-hover:text-white transition-colors">
+                  Filter
+                </span>
+              </button>
+
+              {/* Main Capture Button */}
+              <div className="my-4">
+                {!showReview && reshootIndex === null && (
+                  <CaptureButton
+                    onClick={startSequence}
+                    disabled={countdown !== null}
+                    isCapturing={countdown !== null}
+                    label="CAPTURE"
+                  />
+                )}
+
+                {!showReview && reshootIndex !== null && (
+                  <CaptureButton
+                    onClick={() => snap(reshootIndex)}
+                    disabled={countdown !== null}
+                    isCapturing={countdown !== null}
+                    label={`SHOT ${reshootIndex + 1}`}
+                  />
+                )}
+
+                {showReview && (
+                  <button
+                    onClick={retakeAll}
+                    className="w-20 h-20 rounded-full flex flex-col items-center justify-center gap-1 transition-all hover:scale-105"
+                    style={{
+                      background: "linear-gradient(135deg, #333, #222)",
+                      border: "3px solid #444",
+                      boxShadow: "0 8px 25px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.1)",
+                    }}
+                  >
+                    <svg
+                      className="w-6 h-6 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                    <span className="text-[10px] font-bold text-zinc-400">RESET</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Gallery/Shots Button */}
+              <button
+                className="flex flex-col items-center gap-2 p-3 rounded-xl transition-all hover:scale-105 hover:bg-white/5 group"
+                onClick={() => allShotsTaken && setShowReview(true)}
+              >
+                <div
+                  className="w-14 h-14 rounded-xl flex items-center justify-center relative overflow-hidden transition-all group-hover:scale-110"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.1)",
+                    border: "2px solid rgba(255, 255, 255, 0.2)",
+                    boxShadow: "0 0 15px rgba(0,0,0,0.3)",
+                  }}
+                >
+                  {shots.filter(Boolean).length > 0 ? (
+                    <>
+                      {shots[shots.filter(Boolean).length - 1] && (
+                        <img
+                          src={shots[shots.filter(Boolean).length - 1]!}
+                          className="w-full h-full object-cover"
+                          alt="Last shot"
+                        />
+                      )}
+                      <div
+                        className="absolute bottom-0 right-0 w-5 h-5 rounded-tl-lg flex items-center justify-center text-xs font-bold"
+                        style={{
+                          background: colors.green,
+                          color: "#fff",
+                        }}
+                      >
+                        {shots.filter(Boolean).length}
+                      </div>
+                    </>
+                  ) : (
+                    <svg
+                      className="w-6 h-6 text-zinc-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  )}
+                </div>
+                <span className="text-xs font-bold text-zinc-400 group-hover:text-white transition-colors">
+                  Gallery
+                </span>
+              </button>
+
+              {/* Shot Counter Display */}
+              <div
+                className="mt-auto px-3 py-2 rounded-lg"
+                style={{
+                  background: "rgba(0, 0, 0, 0.4)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                }}
+              >
+                <div className="flex gap-1.5 justify-center">
+                  {shots.map((shot, i) => {
+                    const dotColor = [colors.blue, colors.red, colors.yellow][i];
+                    return (
+                      <div
+                        key={i}
+                        className="w-3 h-3 rounded-full transition-all"
+                        style={{
+                          background: shot ? dotColor : "rgba(255,255,255,0.2)",
+                          boxShadow: shot ? `0 0 8px ${dotColor}` : "none",
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="text-[10px] text-center text-zinc-500 mt-1 font-mono">
+                  {shots.filter(Boolean).length}/3
                 </div>
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Sidebar */}
+          {/* Sidebar - Info & Actions */}
           <div className="space-y-6">
-            <div>
-              <h1 className="text-5xl font-black text-white mb-2">BOOTH</h1>
-              <p className="text-zinc-400">
+            {/* Header with GDG branding */}
+            <div className="relative">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="flex gap-1">
+                  {colorArray.map((color, i) => (
+                    <div
+                      key={i}
+                      className="w-3 h-3 rounded-full"
+                      style={{
+                        backgroundColor: color,
+                        animation: `twinkle ${2 + i * 0.5}s ease-in-out infinite`,
+                        animationDelay: `${i * 0.2}s`,
+                      }}
+                    />
+                  ))}
+                </div>
+                <span className="text-zinc-400 text-sm font-medium tracking-wider uppercase">
+                  GDG Photobooth
+                </span>
+              </div>
+              <h1
+                className="text-5xl font-black bg-clip-text text-transparent"
+                style={{
+                  backgroundImage: `linear-gradient(135deg, ${colors.blue}, ${colors.red}, ${colors.yellow}, ${colors.green})`,
+                  backgroundSize: "300% 300%",
+                  animation: "gradientShift 5s ease infinite",
+                }}
+              >
+                PHOTO BOOTH
+              </h1>
+              <p className="text-zinc-400 mt-2 flex items-center gap-2">
+                <span
+                  className="inline-block w-2 h-2 rounded-full animate-pulse"
+                  style={{ backgroundColor: colors.green }}
+                />
                 Shot {Math.min(currentShotIndex + 1, 3)} of 3
               </p>
             </div>
 
-            {/* Filters */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
-                Filters
-              </h3>
-              <div className="grid grid-cols-2 gap-2">
-                {FILTERS.map((f) => (
-                  <button
-                    key={f.name}
-                    onClick={() => setCurrentFilter(f.value)}
-                    className={`py-3 px-4 rounded-xl font-bold text-sm transition-all ${
-                      currentFilter === f.value
-                        ? "bg-white text-black"
-                        : "bg-zinc-800 text-white hover:bg-zinc-700"
-                    }`}
+            {/* Quick Filter Preview */}
+            <div
+              className="p-5 rounded-2xl cursor-pointer transition-all hover:scale-[1.01]"
+              style={{
+                background: "rgba(255, 255, 255, 0.03)",
+                backdropFilter: "blur(10px)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+              }}
+              onClick={() => setShowFilterModal(true)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-full overflow-hidden"
+                    style={{
+                      border: `2px solid ${currentFilterObj.color}`,
+                    }}
                   >
-                    {f.name}
-                  </button>
-                ))}
+                    <img
+                      src="/sparky.webp"
+                      alt="Filter preview"
+                      className="w-full h-full object-cover"
+                      style={{ filter: currentFilter || "none" }}
+                    />
+                  </div>
+                  <div>
+                    <div className="text-white font-bold">{currentFilterObj.name}</div>
+                    <div className="text-zinc-500 text-sm">Current filter</div>
+                  </div>
+                </div>
+                <div
+                  className="px-4 py-2 rounded-lg text-sm font-bold transition-all hover:scale-105"
+                  style={{
+                    background: `linear-gradient(135deg, ${colors.blue}30, ${colors.green}30)`,
+                    color: colors.blue,
+                  }}
+                >
+                  Change
+                </div>
               </div>
             </div>
 
-            {/* Capture / Review */}
-            {!showReview ? (
-              <>
-                {/* Sequence button only visible if not retaking */}
-                {reshootIndex === null && (
-                  <button
-                    onClick={() => startSequence()}
-                    disabled={countdown !== null}
-                    className="w-full py-6 bg-white hover:bg-gray-100 disabled:bg-gray-400 text-black rounded-2xl font-black text-xl transition-all hover:scale-105 active:scale-95 disabled:cursor-not-allowed shadow-2xl"
-                  >
-                    START 3-SHOT SEQUENCE
-                  </button>
-                )}
-
-                <div className="flex gap-2">
-                  {shots.map((_, i) => {
-                    if (reshootIndex === null) return null; // hide single-shot buttons at start
-                    if (reshootIndex !== i) return null; // only show the specific retake
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => snap(i)}
-                        disabled={countdown !== null}
-                        className="flex-1 py-3 bg-zinc-800 text-white rounded-xl"
-                      >
-                        Take Shot {i + 1}
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            ) : (
+            {/* Review Section */}
+            {showReview && (
               <div className="space-y-6">
-                <h2 className="text-4xl font-black text-white mb-2">Review</h2>
-                <p className="text-zinc-400">Your three shots</p>
+                <div>
+                  <h2
+                    className="text-4xl font-black bg-clip-text text-transparent mb-2"
+                    style={{
+                      backgroundImage: `linear-gradient(135deg, ${colors.yellow}, ${colors.red})`,
+                    }}
+                  >
+                    Review
+                  </h2>
+                  <p className="text-zinc-400">Your three amazing shots</p>
+                </div>
 
                 <div className="space-y-4">
-                  {shots.map((s, i) => (
-                    <div key={i} className="flex gap-3 items-center">
-                      <div className="relative w-20 h-28 bg-zinc-900 rounded-lg overflow-hidden shadow-lg border-2 border-zinc-800 flex-shrink-0">
-                        {s && (
-                          <img
-                            src={s}
-                            className="w-full h-full object-cover"
-                            alt={`Shot ${i + 1}`}
-                          />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-white font-bold mb-1">
-                          Shot {i + 1}
-                        </div>
-                        <button
-                          onClick={() => retake(i)}
-                          className="text-sm text-zinc-400 hover:text-white transition-colors underline"
+                  {shots.map((s, i) => {
+                    const shotColor = [colors.blue, colors.red, colors.yellow][i];
+                    return (
+                      <div
+                        key={i}
+                        className="flex gap-4 items-center p-3 rounded-xl transition-all hover:scale-[1.01]"
+                        style={{
+                          background: "rgba(255, 255, 255, 0.03)",
+                          border: `1px solid ${shotColor}30`,
+                        }}
+                      >
+                        <div
+                          className="relative w-20 h-28 rounded-lg overflow-hidden shadow-lg flex-shrink-0"
+                          style={{
+                            border: `2px solid ${shotColor}`,
+                            boxShadow: `0 8px 20px ${shotColor}30`,
+                          }}
                         >
-                          Retake this shot
-                        </button>
+                          {s && (
+                            <img
+                              src={s}
+                              className="w-full h-full object-cover"
+                              alt={`Shot ${i + 1}`}
+                            />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-bold mb-1" style={{ color: shotColor }}>
+                            Shot {i + 1}
+                          </div>
+                          <button
+                            onClick={() => retake(i)}
+                            className="text-sm text-zinc-400 hover:text-white transition-colors flex items-center gap-1 group"
+                          >
+                            <svg
+                              className="w-4 h-4 group-hover:rotate-180 transition-transform duration-300"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                              />
+                            </svg>
+                            Retake this shot
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Download & Email */}
                 <div className="space-y-3 pt-4">
                   <button
                     onClick={downloadStrip}
-                    className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-xl"
+                    className="w-full py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98]"
+                    style={{
+                      background: `linear-gradient(135deg, ${colors.green}, ${colors.blue})`,
+                      boxShadow: `0 15px 35px ${colors.green}40`,
+                      color: "#fff",
+                    }}
                   >
-                    Download Strip
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                      />
+                    </svg>
+                    Download Photo Strip
                   </button>
 
                   {!sent ? (
-                    <div className="flex flex-col gap-2">
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter your email"
-                        className="w-full py-3 px-4 rounded-xl bg-zinc-800 text-white placeholder:text-zinc-400"
-                      />
+                    <div className="space-y-3">
+                      <div
+                        className="relative rounded-xl overflow-hidden"
+                        style={{
+                          background: "rgba(255, 255, 255, 0.05)",
+                          border: "1px solid rgba(255, 255, 255, 0.1)",
+                        }}
+                      >
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="Enter your email"
+                          className="w-full py-4 px-5 bg-transparent text-white placeholder:text-zinc-500 focus:outline-none"
+                        />
+                        <div
+                          className="absolute bottom-0 left-0 right-0 h-0.5"
+                          style={{
+                            background: email
+                              ? `linear-gradient(90deg, ${colors.blue}, ${colors.green})`
+                              : "transparent",
+                          }}
+                        />
+                      </div>
                       <button
                         disabled={!email || sending}
                         onClick={async () => {
                           setSending(true);
                           try {
                             const dataUrl = await generateFinal();
-                            // Convert base64 to blob
                             const blob = await (await fetch(dataUrl)).blob();
                             const formData = new FormData();
                             formData.append("email", email);
@@ -436,26 +791,149 @@ export default function CameraBooth() {
                             setSending(false);
                           }
                         }}
-                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all disabled:bg-gray-400"
+                        className="w-full py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02]"
+                        style={{
+                          background:
+                            !email || sending
+                              ? "#444"
+                              : `linear-gradient(135deg, ${colors.blue}, ${colors.red})`,
+                          boxShadow:
+                            !email || sending ? "none" : `0 15px 35px ${colors.blue}40`,
+                          color: "#fff",
+                        }}
                       >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
+                        </svg>
                         {sending ? "Sending..." : "Send to Email"}
                       </button>
                     </div>
                   ) : (
-                    <div className="text-green-400 font-bold">
-                      Sent! Check your inbox.
+                    <div
+                      className="flex items-center gap-3 p-4 rounded-xl"
+                      style={{
+                        background: `${colors.green}20`,
+                        border: `1px solid ${colors.green}50`,
+                      }}
+                    >
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center"
+                        style={{ background: colors.green }}
+                      >
+                        <svg
+                          className="w-5 h-5 text-white"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-bold" style={{ color: colors.green }}>
+                          Email Sent!
+                        </div>
+                        <div className="text-zinc-400 text-sm">Check your inbox</div>
+                      </div>
                     </div>
                   )}
 
                   <button
                     onClick={retakeAll}
-                    className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-bold transition-all"
+                    className="w-full py-4 rounded-xl font-bold transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
+                    style={{
+                      background: "rgba(255, 255, 255, 0.05)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "#fff",
+                    }}
                   >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
                     Start Over
                   </button>
                 </div>
               </div>
             )}
+
+            {/* Instructions when not in review */}
+            {!showReview && (
+              <div
+                className="p-5 rounded-2xl"
+                style={{
+                  background: "rgba(255, 255, 255, 0.03)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                }}
+              >
+                <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                  How it works
+                </h3>
+                <ol className="space-y-3 text-zinc-400 text-sm">
+                  <li className="flex items-start gap-3">
+                    <span
+                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
+                      style={{ background: colors.blue, color: "#fff" }}
+                    >
+                      1
+                    </span>
+                    <span>Choose your favorite filter</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span
+                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
+                      style={{ background: colors.red, color: "#fff" }}
+                    >
+                      2
+                    </span>
+                    <span>Press the capture button to take 3 shots</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span
+                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
+                      style={{ background: colors.yellow, color: "#fff" }}
+                    >
+                      3
+                    </span>
+                    <span>Review and retake if needed</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span
+                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
+                      style={{ background: colors.green, color: "#fff" }}
+                    >
+                      4
+                    </span>
+                    <span>Download or email your photo strip!</span>
+                  </li>
+                </ol>
+              </div>
+            )}
+
+            <GDGFooter />
           </div>
         </div>
         <canvas ref={snapCanvasRef} className="hidden" />
