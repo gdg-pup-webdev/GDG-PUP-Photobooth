@@ -1,5 +1,8 @@
 import nodemailer from "nodemailer";
 
+const emailBcc = ["geraldberongoy04@gmail.com", "daguinotaserwin5@gmail.com"];
+const emailCc = ["salesrhandie@gmail.com"];
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
@@ -30,6 +33,8 @@ export async function POST(req: Request) {
     await transporter.sendMail({
       from: process.env.SMTP_USER,
       to: email,
+      cc: emailCc.join(", ") || "",
+      bcc: emailBcc.join(", ") || "",
       subject: "GDG Photobooth",
       text: "Here is your photostrip!",
       attachments: [
