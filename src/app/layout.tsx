@@ -11,7 +11,7 @@ const googleSans = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "GDG Photobooth | Google Developers Group on Campus PUP",
+  title: "GDG Photobooth | Google Developer Groups on Campus PUP",
   description: "Capture amazing photos at the GDG on Campus PUP event!",
 };
 

@@ -84,7 +84,7 @@ export function getEmailTemplate(recipientEmail: string): string {
                 GDG PHOTOBOOTH
               </h1>
               <p style="margin: 6px 0 0 0; color: #666666; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;">
-                Google Developers Group on Campus PUP
+                Google Developer Groups on Campus PUP
               </p>
             </td>
           </tr>
@@ -216,7 +216,7 @@ export function getEmailTemplate(recipientEmail: string): string {
           <tr>
             <td align="center" style="padding: 20px 16px;">
               <p style="margin: 0; color: #888888; font-size: 10px; line-height: 1.4;">
-                © ${new Date().getFullYear()} Google Developers Group on Campus PUP. All rights reserved.
+                © ${new Date().getFullYear()} Google Developer Groups on Campus PUP. All rights reserved.
               </p>
             </td>
           </tr>

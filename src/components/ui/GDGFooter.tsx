@@ -16,7 +16,7 @@ export default function GDGFooter() {
             />
           ))}
         </div>
-        <span className="font-bold text-zinc-400">Google Developers Group on Campus PUP</span>
+        <span className="font-bold text-zinc-400">Google Developer Groups on Campus PUP</span>
       </div>
     </div>
   );
