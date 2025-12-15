@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     description: "Capture amazing photos at the GDG on Campus PUP event!",
     images: [
       {
-        url: "/sparky.webp",
+        url: "/sample/sample4.webp",
         width: 1200,
         height: 630,
         alt: "GDG on Campus PUP Photobooth",
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "GDG Photobooth | Google Developer Groups on Campus PUP",
     description: "Capture amazing photos at the GDG on Campus PUP event!",
-    images: ["/sparky.webp"],
+    images: ["/sample/sample4.webp"],
   },
 };
 
