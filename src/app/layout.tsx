@@ -13,6 +13,25 @@ const googleSans = Outfit({
 export const metadata: Metadata = {
   title: "GDG Photobooth | Google Developer Groups on Campus PUP",
   description: "Capture amazing photos at the GDG on Campus PUP event!",
+  openGraph: {
+    title: "GDG Photobooth | Google Developer Groups on Campus PUP",
+    description: "Capture amazing photos at the GDG on Campus PUP event!",
+    images: [
+      {
+        url: "/sparky.webp",
+        width: 1200,
+        height: 630,
+        alt: "GDG on Campus PUP Photobooth",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GDG Photobooth | Google Developer Groups on Campus PUP",
+    description: "Capture amazing photos at the GDG on Campus PUP event!",
+    images: ["/sparky.webp"],
+  },
 };
 
 export default function RootLayout({
